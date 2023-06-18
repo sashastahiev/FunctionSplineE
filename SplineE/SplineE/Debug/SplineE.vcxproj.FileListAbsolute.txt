@@ -1,0 +1,3 @@
+C:\Users\vebiu\OneDrive\Документы\ИЭС Курсовая\SplineE\SplineE\Debug\SplineE.MyForm.resources
+C:\Users\vebiu\OneDrive\Документы\ИЭС Курсовая\SplineE\SplineE\Debug\SplineE.vcxproj.GenerateResource.cache
+C:\Users\vebiu\OneDrive\Документы\ИЭС Курсовая\SplineE\SplineE\Debug\SplineE.vcxproj.AssemblyReference.cache
