@@ -150,22 +150,22 @@ System::Void SplineE::MyForm::button1_Click(System::Object^ sender, System::Even
     double x_eval = x[0], rez1, rez2;
     ofstream table;
     table.open("tableEsplain.txt");
-    table << "  x  |  y(x)  |   y'(x)   | F1'(x) - y'(x) | F2'(x) - y'(x) |  F1(x) - y(x)  |  F2(x) - y(x)  |  G(x) - y(x)   |  H(x) - y(x)   |";
+    table << "  x  |  y(x)  |  y'(x)  | F1'(x) - y'(x) | F2'(x) - y'(x) | F1(x) - y(x) | F2(x) - y(x) | G(x) - y(x) | H(x) - y(x) |";
     table << "\n";
     if (sklei1->Checked == true) {
-        while (x_eval <= x[9])
+        while (x_eval < x[9])
         {
             rez1 = x_eval;
             rez2 = exp_spline_irregular(rez1, x, y, true);
-            if (x_eval >= x[1]) {
-                table << xt << " | " << floor(yt * 1000) / 1000 << " | " 
-                    << floor(ysht*1000)/1000 << " | " 
-                    << floor((Y1SHT - ysht)*1000)/1000 << " | "
-                    << floor((Y2SHT - ysht)*1000)/1000 << " | "
-                    << floor((Y1T - yt)*1000)/1000 << " | " 
-                    << floor((Y2T - yt)*1000)/1000 << " | " 
-                    << floor((HT - yt)*1000)/1000 << " | " 
-                    << floor((GT - yt)*1000)/1000 << "|" << endl;
+            if (x_eval >= x[1] && x_eval <= x[8]) {
+                table << xt << " | " << floor(yt * 10000) / 10000 << " | " 
+                    << floor(ysht*10000)/10000 << " | " 
+                    << abs(floor((Y1SHT - ysht)*10000)/10000) << " | "
+                    << abs(floor((Y2SHT - ysht)*10000)/10000) << " | "
+                    << abs(floor((Y1T - yt)*10000)/10000) << " | " 
+                    << abs(floor((Y2T - yt)*10000)/10000) << " | " 
+                    << abs(floor((HT - yt)*10000)/10000) << " | " 
+                    << abs(floor((GT - yt)*10000)/10000) << "|" << endl;
             }
             this->chart1->Series[0]->Points->AddXY(rez1, rez2);
             x_eval = x_eval + ((x[9] - x[0]) / N_eval);
@@ -173,19 +173,19 @@ System::Void SplineE::MyForm::button1_Click(System::Object^ sender, System::Even
         table << "\n";
     }
     else if (sklei2->Checked == true) {
-        while (x_eval <= x[9])
+        while (x_eval < x[9])
         {
             rez1 = x_eval;
             rez2 = exp_spline_irregular(rez1, x, y, false);
-            if (x_eval >= x[1]) {
-                table << xt << " | " << floor(yt * 1000)/1000 << " | "
-                    << floor(ysht * 1000)/1000 << " | "
-                    << floor((Y1SHT - ysht) * 1000)/1000 << " | "
-                    << floor((Y2SHT - ysht) * 1000)/1000 << " | "
-                    << floor((Y1T - yt) * 1000)/1000 << " | "
-                    << floor((Y2T - yt) * 1000)/1000 << " | "
-                    << floor((HT - yt) * 1000)/1000 << " | "
-                    << floor((GT - yt) * 1000)/1000 << "|" << endl;
+            if (x_eval >= x[1] && x_eval <= x[8]) {
+                table << xt << " | " << floor(yt * 10000) / 10000 << " | "
+                    << floor(ysht * 10000) / 10000 << " | "
+                    << floor((Y1SHT - ysht) * 10000) / 10000 << " | "
+                    << floor((Y2SHT - ysht) * 10000) / 10000 << " | "
+                    << floor((Y1T - yt) * 10000) / 10000 << " | "
+                    << floor((Y2T - yt) * 10000) / 10000 << " | "
+                    << floor((HT - yt) * 10000) / 10000 << " | "
+                    << floor((GT - yt) * 10000) / 10000 << "|" << endl;
             }
             this->chart1->Series[0]->Points->AddXY(rez1, rez2);
             x_eval = x_eval + ((x[9] - x[0]) / N_eval);
