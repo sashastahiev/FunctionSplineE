@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <math.h>
 using namespace std;
 using namespace System;
 using namespace System::Windows::Forms;
@@ -19,6 +20,7 @@ int main() {
 	Application::Run(% form);
 }
 
+double xt, yt, ysht, Y1T = 0, Y2T = 0, Y1SHT = 0, Y2SHT = 0, GT, HT;
 double R(double A, double x1, double x2, double x3, double y1, double y2, double y3)
 {
     return (y2 - y1) * (exp(A * (x3 - x2)) - 1) + (y3 - y2) * (exp(-A * (x2 - x1)) - 1);
@@ -125,42 +127,75 @@ double exp_spline_irregular(double x_eval, double* x, double* y, bool A)
     double F1, F2;
     F1 = C1 + B1 * exp(A1 * x_eval);
     F2 = C2 + B2 * exp(A2 * x_eval);
+    xt = x_eval;
+    yt = sqrt(xt);
+    ysht = 1 / (2 * sqrt(xt));
+    Y1T = F1;
+    Y2T = F2;
+    Y1SHT = A1 * B1 * exp(A1 * x_eval);
+    Y2SHT = A2 * B2 * exp(A2 * x_eval);
+    HT = (F1 + F2) / 2;
+    GT = ((x[i] - x_eval) * F1 + (x_eval - x[i - 1]) * F2) / (x[i] - x[i - 1]);
     if (A) 
-        return (F1 + F2) / 2;
+        return (F1 + F2) / 2;//H{x}
     else
-        return ((x[i] - x_eval) * F1 + (x_eval - x[i - 1]) * F2) / (x[i] - x[i - 1]);
+        return ((x[i] - x_eval) * F1 + (x_eval - x[i - 1]) * F2) / (x[i] - x[i - 1]);//G(x)
 }
 
-
+//Построить y = C + B*exp(Ax)
 System::Void SplineE::MyForm::button1_Click(System::Object^ sender, System::EventArgs^ e)
 {
-    int N_eval = 300;
+    int N_eval = 90;
     int i = 0;
-    double x_eval = x[0], rez1, rez2, rez2h;
+    double x_eval = x[0], rez1, rez2;
+    ofstream table;
+    table.open("tableEsplain.txt");
+    table << "  x  |  y(x)  |   y'(x)   | F1'(x) - y'(x) | F2'(x) - y'(x) |  F1(x) - y(x)  |  F2(x) - y(x)  |  G(x) - y(x)   |  H(x) - y(x)   |";
+    table << "\n";
     if (sklei1->Checked == true) {
-        while (x_eval < x[9])
+        while (x_eval <= x[9])
         {
             rez1 = x_eval;
             rez2 = exp_spline_irregular(rez1, x, y, true);
-            rez2h = F_shtrih(rez1, x, y, true);
+            if (x_eval >= x[1]) {
+                table << xt << " | " << floor(yt * 1000) / 1000 << " | " 
+                    << floor(ysht*1000)/1000 << " | " 
+                    << floor((Y1SHT - ysht)*1000)/1000 << " | "
+                    << floor((Y2SHT - ysht)*1000)/1000 << " | "
+                    << floor((Y1T - yt)*1000)/1000 << " | " 
+                    << floor((Y2T - yt)*1000)/1000 << " | " 
+                    << floor((HT - yt)*1000)/1000 << " | " 
+                    << floor((GT - yt)*1000)/1000 << "|" << endl;
+            }
             this->chart1->Series[0]->Points->AddXY(rez1, rez2);
-            this->chart1->Series[2]->Points->AddXY(rez1, rez2h);
             x_eval = x_eval + ((x[9] - x[0]) / N_eval);
         }
+        table << "\n";
     }
     else if (sklei2->Checked == true) {
-        while (x_eval < x[9])
+        while (x_eval <= x[9])
         {
             rez1 = x_eval;
             rez2 = exp_spline_irregular(rez1, x, y, false);
-            rez2h = F_shtrih(rez1, x, y, false);
+            if (x_eval >= x[1]) {
+                table << xt << " | " << floor(yt * 1000)/1000 << " | "
+                    << floor(ysht * 1000)/1000 << " | "
+                    << floor((Y1SHT - ysht) * 1000)/1000 << " | "
+                    << floor((Y2SHT - ysht) * 1000)/1000 << " | "
+                    << floor((Y1T - yt) * 1000)/1000 << " | "
+                    << floor((Y2T - yt) * 1000)/1000 << " | "
+                    << floor((HT - yt) * 1000)/1000 << " | "
+                    << floor((GT - yt) * 1000)/1000 << "|" << endl;
+            }
             this->chart1->Series[0]->Points->AddXY(rez1, rez2);
-            this->chart1->Series[2]->Points->AddXY(rez1, rez2h);
             x_eval = x_eval + ((x[9] - x[0]) / N_eval);
         }
+        table << "\n";
     }
+    table.close();
 }
 
+//Построить x1,x2,x3,...
 System::Void SplineE::MyForm::button2_Click(System::Object^ sender, System::EventArgs^ e)
 {
     x[0] = Convert::ToDouble(textBox_x1->Text);
@@ -188,30 +223,78 @@ System::Void SplineE::MyForm::button2_Click(System::Object^ sender, System::Even
     }
 }
 
+//Построить y' = A*B*exp(Ax)
+System::Void SplineE::MyForm::button8_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    int N_eval = 90;
+    double x_eval = x[0], rez1, rez2h;
+    if (sklei1->Checked == true) {
+        while (x_eval < x[9])
+        {
+            rez1 = x_eval;
+            rez2h = F_shtrih(rez1, x, y, true);
+            this->chart1->Series[2]->Points->AddXY(rez1, rez2h);
+            x_eval = x_eval + ((x[9] - x[0]) / N_eval);
+        }
+    }
+    else if (sklei2->Checked == true) {
+        while (x_eval < x[9])
+        {
+            rez1 = x_eval;
+            rez2h = F_shtrih(rez1, x, y, false);
+            this->chart1->Series[2]->Points->AddXY(rez1, rez2h);
+            x_eval = x_eval + ((x[9] - x[0]) / N_eval);
+        }
+    }
+}
+
+//Построить y = sqrt(x)
+System::Void SplineE::MyForm::button7_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    double m;
+    this->chart1->Series[3]->Points->AddXY(0, 0);
+    for (int i = 1; i < 91; i++) {
+        m = double(i);
+        this->chart1->Series[3]->Points->AddXY(m / 100, sqrt(m / 100));
+    }
+}
+
+//Построить y' = 1/(2*sqrt(x))
+System::Void SplineE::MyForm::button9_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    double m;
+    for (int i = 1; i < 91; i++) {
+        m = double(i);
+        this->chart1->Series[4]->Points->AddXY(m / 100, 1 / (2 * (sqrt(m / 100))));
+    }
+}
+
+//Файл 1
 System::Void SplineE::MyForm::button3_Click(System::Object^ sender, System::EventArgs^ e)
 {
     textBox_x1->Text = "0";
-    textBox_y1->Text = "830";
-    textBox_x2->Text = "1";
-    textBox_y2->Text = "2310";
-    textBox_x3->Text = "2";
-    textBox_y3->Text = "3069";
-    textBox_x4->Text = "3";
-    textBox_y4->Text = "3533";
-    textBox_x5->Text = "4";
-    textBox_y5->Text = "3705";
-    textBox_x6->Text = "5,3";
-    textBox_y6->Text = "3817";
-    textBox_x7->Text = "6,2";
-    textBox_y7->Text = "3935";
-    textBox_x8->Text = "10";
-    textBox_y8->Text = "4046";
-    textBox_x9->Text = "11";
-    textBox_y9->Text = "4166";
-    textBox_x10->Text = "13";
-    textBox_y10->Text = "4276";
+    textBox_y1->Text = "0";
+    textBox_x2->Text = "0,1";
+    textBox_y2->Text = "0,316";
+    textBox_x3->Text = "0,2";
+    textBox_y3->Text = "0,447";
+    textBox_x4->Text = "0,3";
+    textBox_y4->Text = "0,547";
+    textBox_x5->Text = "0,4";
+    textBox_y5->Text = "0,632";
+    textBox_x6->Text = "0,5";
+    textBox_y6->Text = "0,707";
+    textBox_x7->Text = "0,6";
+    textBox_y7->Text = "0,774";
+    textBox_x8->Text = "0,7";
+    textBox_y8->Text = "0,836";
+    textBox_x9->Text = "0,8";
+    textBox_y9->Text = "0,894";
+    textBox_x10->Text = "0,9";
+    textBox_y10->Text = "0,948";
 }
 
+//Файл 2
 System::Void SplineE::MyForm::button4_Click(System::Object^ sender, System::EventArgs^ e)
 {
     textBox_x1->Text = "-10";
@@ -236,6 +319,7 @@ System::Void SplineE::MyForm::button4_Click(System::Object^ sender, System::Even
     textBox_y10->Text = "1,847";
 }
 
+//Файл 3
 System::Void SplineE::MyForm::button5_Click(System::Object^ sender, System::EventArgs^ e)
 {
     textBox_x1->Text = "-10";
@@ -260,6 +344,7 @@ System::Void SplineE::MyForm::button5_Click(System::Object^ sender, System::Even
     textBox_y10->Text = "1,106";
 }
 
+//Очистить x1,x2,x3,...
 System::Void SplineE::MyForm::button6_Click(System::Object^ sender, System::EventArgs^ e)
 {
     textBox_x1->Text = "";
@@ -282,7 +367,30 @@ System::Void SplineE::MyForm::button6_Click(System::Object^ sender, System::Even
     textBox_y9->Text = "";
     textBox_x10->Text = "";
     textBox_y10->Text = "";
-    this->chart1->Series[0]->Points->Clear();
     this->chart1->Series[1]->Points->Clear();
+}
+
+//Очистить y = C + B*exp(Ax)
+System::Void SplineE::MyForm::button10_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    this->chart1->Series[0]->Points->Clear();
+}
+
+//Очистить y' = A*B*exp(Ax) 
+System::Void SplineE::MyForm::button11_Click(System::Object^ sender, System::EventArgs^ e)
+{
     this->chart1->Series[2]->Points->Clear();
 }
+
+//Очистить y = sqrt(x)
+System::Void SplineE::MyForm::button12_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    this->chart1->Series[3]->Points->Clear();
+}
+
+//Очистить y' = 1/(2*sqrt(x)) 
+System::Void SplineE::MyForm::button13_Click(System::Object^ sender, System::EventArgs^ e)
+{
+    this->chart1->Series[4]->Points->Clear();
+}
+
